@@ -24,8 +24,12 @@ from lerobot.common.datasets.lerobot_dataset import HF_LEROBOT_HOME
 from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
 import tensorflow_datasets as tfds
 import tyro
+# 自定义输出目录
+from pathlib import Path
+OUTPUT_DIR = Path("data/lerobot")  # 这里可以改成你想要的路径
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)  # 确保父目录存在
 
-REPO_NAME = "your_hf_username/libero"  # Name of the output dataset, also used for the Hugging Face Hub
+REPO_NAME = "libero"  # Name of the output dataset, also used for the Hugging Face Hub
 RAW_DATASET_NAMES = [
     "libero_10_no_noops",
     "libero_goal_no_noops",
@@ -36,7 +40,10 @@ RAW_DATASET_NAMES = [
 
 def main(data_dir: str, *, push_to_hub: bool = False):
     # Clean up any existing dataset in the output directory
-    output_path = HF_LEROBOT_HOME / REPO_NAME
+    # output_path = HF_LEROBOT_HOME / REPO_NAME
+    
+    
+    output_path = OUTPUT_DIR / REPO_NAME
     if output_path.exists():
         shutil.rmtree(output_path)
 
@@ -45,6 +52,7 @@ def main(data_dir: str, *, push_to_hub: bool = False):
     # LeRobot assumes that dtype of image data is `image`
     dataset = LeRobotDataset.create(
         repo_id=REPO_NAME,
+        root=output_path,  
         robot_type="panda",
         fps=10,
         features={
