@@ -48,31 +48,42 @@ DEFAULT_TASK_TEXT = (
 )
 
 VECTOR_DIMS = {
-    "observation.state.left_tcp": 7,
-    "observation.state.right_tcp": 7,
-    "observation.state.left_delta_tcp": 6,
-    "observation.state.right_delta_tcp": 6,
-    "observation.state.left_finger_pressure": 6,
-    "observation.state.right_finger_pressure": 6,
-    "observation.state.left_wrist_force": 3,
-    "observation.state.right_wrist_force": 3,
-    "action.left_delta_tcp": 6,
-    "action.right_delta_tcp": 6,
+    "observation.state.left_joints":7,
+    "observation.state.right_joints":7,
+    "observation.state.left_hands":6,
+    "observation.state.right_hands":6,
+    "action.left_joints":7,
+    "action.right_joints":7,
+    "action.left_hands":6,
+    "action.right_hands":6,   
 }
+# VECTOR_DIMS = {
+#     "observation.state.left_tcp": 7,
+#     "observation.state.right_tcp": 7,
+#     "observation.state.left_delta_tcp": 6,
+#     "observation.state.right_delta_tcp": 6,
+#     "observation.state.left_finger_pressure": 6,
+#     "observation.state.right_finger_pressure": 6,
+#     "observation.state.left_wrist_force": 3,
+#     "observation.state.right_wrist_force": 3,
+#     "action.left_delta_tcp": 6,
+#     "action.right_delta_tcp": 6,
+# }
+
 
 SCALAR_FLOAT_FEATURES = [
-    "observation.state.left_pinch",
-    "observation.state.right_pinch",
-    "action.left_pinch",
-    "action.right_pinch",
-    "task.progress.chest",
-    "task.progress.left",
-    "task.progress.right",
+    # "observation.state.left_pinch",
+    # "observation.state.right_pinch",
+    # "action.left_pinch",
+    # "action.right_pinch",
+    # "task.progress.chest",
+    # "task.progress.left",
+    # "task.progress.right",
     "timestamp",
 ]
 
 SCALAR_INT_FEATURES = [
-    "teleoperated",
+    # "teleoperated",
     "frame_index",
     "episode_index",
     "index",
@@ -80,24 +91,34 @@ SCALAR_INT_FEATURES = [
 ]
 
 CONVERTED_COLUMN_ORDER = [
-    "observation.state.left_tcp",
-    "observation.state.right_tcp",
-    "observation.state.left_delta_tcp",
-    "observation.state.right_delta_tcp",
-    "observation.state.left_pinch",
-    "observation.state.right_pinch",
-    "observation.state.left_finger_pressure",
-    "observation.state.right_finger_pressure",
-    "observation.state.left_wrist_force",
-    "observation.state.right_wrist_force",
-    "action.left_delta_tcp",
-    "action.right_delta_tcp",
-    "action.left_pinch",
-    "action.right_pinch",
-    "task.progress.chest",
-    "task.progress.left",
-    "task.progress.right",
-    "teleoperated",
+    "observation.state.left_joints",
+    "observation.state.right_joints",
+    "observation.state.left_hands",
+    "observation.state.right_hands",
+    "action.left_joints",
+    "action.right_joints",
+    "action.left_hands",
+    "action.right_hands",   
+
+    
+    # "observation.state.left_tcp",
+    # "observation.state.right_tcp",
+    # "observation.state.left_delta_tcp",
+    # "observation.state.right_delta_tcp",
+    # "observation.state.left_pinch",
+    # "observation.state.right_pinch",
+    # "observation.state.left_finger_pressure",
+    # "observation.state.right_finger_pressure",
+    # "observation.state.left_wrist_force",
+    # "observation.state.right_wrist_force",
+    # "action.left_delta_tcp",
+    # "action.right_delta_tcp",
+    # "action.left_pinch",
+    # "action.right_pinch",
+    # "task.progress.chest",
+    # "task.progress.left",
+    # "task.progress.right",
+    # "teleoperated",
     "timestamp",
     "frame_index",
     "episode_index",
@@ -106,6 +127,42 @@ CONVERTED_COLUMN_ORDER = [
 ]
 
 STATS_KEYS = ["min", "max", "mean", "std", "count", "q01", "q10", "q50", "q90", "q99"]
+
+LEFT_JOINTS_NAMES = [
+    "Shoulder_Y_L_pos",
+    "Shoulder_X_L_pos",
+    "Shoulder_Z_L_pos",
+    "Elbow_L_pos",
+    "Wrist_Z_L_pos",
+    "Wrist_Y_L_pos",
+    "Wrist_X_L_pos",
+]
+RIGHT_JOINTS_NAMES = [
+    "Shoulder_Y_R_pos",
+    "Shoulder_X_R_pos",
+    "Shoulder_Z_R_pos",
+    "Elbow_R_pos",
+    "Wrist_Z_R_pos",
+    "Wrist_Y_R_pos",
+    "Wrist_X_R_pos",
+]
+LEFT_HANDS_NAMES = [
+    "THUMB_MP_LEFT",
+    "THUMB_CMC_LEFT",
+    "INDEX_MCP_LEFT",
+    "MIDDLE_MCP_LEFT",
+    "RING_MCP_LEFT",
+    "LITTLE_MCP_LEFT",
+]
+RIGHT_HANDS_NAMES = [
+    "THUMB_MP_RIGHT",
+    "THUMB_CMC_RIGHT",
+    "INDEX_MCP_RIGHT",
+    "MIDDLE_MCP_RIGHT",
+    "RING_MCP_RIGHT",
+    "LITTLE_MCP_RIGHT",
+]
+
 
 LEFT_TCP_NAMES = [
     "end_position_l_x",
@@ -453,6 +510,17 @@ def build_source_layout(src_info: Dict[str, Any]) -> Dict[str, List[int]]:
     act_names = get_feature_names(src_info, "actions")
 
     return {
+        "obs_left_joints": resolve_named_indices(obs_names, LEFT_JOINTS_NAMES, "observation.state"),
+        "obs_right_joints": resolve_named_indices(obs_names, RIGHT_JOINTS_NAMES, "observation.state"),
+        "obs_left_hands": resolve_named_indices(obs_names, LEFT_HANDS_NAMES, "observation.state"),
+        "obs_right_hands": resolve_named_indices(obs_names, RIGHT_HANDS_NAMES, "observation.state"),
+        "act_left_joints": resolve_named_indices(obs_names, LEFT_JOINTS_NAMES, "actions"),
+        "act_right_joints": resolve_named_indices(obs_names, RIGHT_JOINTS_NAMES, "actions"),
+        "act_left_hands": resolve_named_indices(obs_names, LEFT_HANDS_NAMES, "actions"),
+        "act_right_hands": resolve_named_indices(obs_names, RIGHT_HANDS_NAMES, "actions"),
+
+
+
         "obs_left_tcp": resolve_named_indices(obs_names, LEFT_TCP_NAMES, "observation.state"),
         "obs_right_tcp": resolve_named_indices(obs_names, RIGHT_TCP_NAMES, "observation.state"),
         "act_left_tcp": resolve_named_indices(act_names, LEFT_TCP_NAMES, "actions"),
@@ -483,33 +551,53 @@ def convert_episode_table(src_parquet: Path, source_layout: Dict[str, List[int]]
     obs = column_to_2d_float(table, "observation.state", row_count)
     act = column_to_2d_float(table, "actions", row_count)
 
-    left_tcp_obs = extract_columns_by_index(obs, source_layout["obs_left_tcp"], row_count)
-    right_tcp_obs = extract_columns_by_index(obs, source_layout["obs_right_tcp"], row_count)
-    left_tcp_act = extract_columns_by_index(act, source_layout["act_left_tcp"], row_count)
-    right_tcp_act = extract_columns_by_index(act, source_layout["act_right_tcp"], row_count)
+    # left_tcp_obs = extract_columns_by_index(obs, source_layout["obs_left_tcp"], row_count)
+    # right_tcp_obs = extract_columns_by_index(obs, source_layout["obs_right_tcp"], row_count)
+    # left_tcp_act = extract_columns_by_index(act, source_layout["act_left_tcp"], row_count)
+    # right_tcp_act = extract_columns_by_index(act, source_layout["act_right_tcp"], row_count)
 
-    left_delta = compute_delta_tcp(left_tcp_obs, left_tcp_act).astype(np.float32)
-    right_delta = compute_delta_tcp(right_tcp_obs, right_tcp_act).astype(np.float32)
+    # left_delta = compute_delta_tcp(left_tcp_obs, left_tcp_act).astype(np.float32)
+    # right_delta = compute_delta_tcp(right_tcp_obs, right_tcp_act).astype(np.float32)
 
+    obs_left_joints = extract_columns_by_index(obs, source_layout["obs_left_joints"], row_count)
+    obs_right_joints = extract_columns_by_index(obs, source_layout["obs_right_joints"], row_count)
+    obs_left_hands = extract_columns_by_index(obs, source_layout["obs_left_hands"], row_count)
+    obs_right_hands = extract_columns_by_index(obs, source_layout["obs_right_hands"], row_count)
+
+    act_left_joints = extract_columns_by_index(act, source_layout["act_left_joints"], row_count)
+    act_right_joints = extract_columns_by_index(act, source_layout["act_right_joints"], row_count)
+    act_left_hands = extract_columns_by_index(act, source_layout["act_left_hands"], row_count)
+    act_right_hands = extract_columns_by_index(act, source_layout["act_right_hands"], row_count)
     converted: Dict[str, np.ndarray] = {
-        "observation.state.left_tcp": left_tcp_obs.astype(np.float32),
-        "observation.state.right_tcp": right_tcp_obs.astype(np.float32),
-        "observation.state.left_delta_tcp": left_delta,
-        "observation.state.right_delta_tcp": right_delta,
-        "observation.state.left_pinch": mean_indices_with_zeros(obs, source_layout["obs_left_pinch"], row_count),
-        "observation.state.right_pinch": mean_indices_with_zeros(obs, source_layout["obs_right_pinch"], row_count),
-        "observation.state.left_finger_pressure": extract_columns_by_index(obs, source_layout["obs_left_pressure"], row_count),
-        "observation.state.right_finger_pressure": extract_columns_by_index(obs, source_layout["obs_right_pressure"], row_count),
-        "observation.state.left_wrist_force": extract_columns_by_index(obs, source_layout["obs_left_force"], row_count),
-        "observation.state.right_wrist_force": extract_columns_by_index(obs, source_layout["obs_right_force"], row_count),
-        "action.left_delta_tcp": left_delta.astype(np.float32),
-        "action.right_delta_tcp": right_delta.astype(np.float32),
-        "action.left_pinch": mean_indices_with_zeros(act, source_layout["act_left_pinch"], row_count),
-        "action.right_pinch": mean_indices_with_zeros(act, source_layout["act_right_pinch"], row_count),
-        "task.progress.chest": np.zeros(row_count, dtype=np.float32),
-        "task.progress.left": np.zeros(row_count, dtype=np.float32),
-        "task.progress.right": np.zeros(row_count, dtype=np.float32),
-        "teleoperated": get_scalar_column_or_default(table, "teleoperated", row_count, np.int64, 0),
+        "observation.state.left_joints":obs_left_joints.astype(np.float32),
+        "observation.state.right_joints":obs_right_joints.astype(np.float32),
+        "observation.state.left_hands":obs_left_hands.astype(np.float32),
+        "observation.state.right_hands":obs_right_hands.astype(np.float32),
+
+        "action.left_joints":act_left_joints.astype(np.float32),
+        "action.right_joints":act_right_joints.astype(np.float32),
+        "action.left_hands":act_left_hands.astype(np.float32),
+        "action.right_hands":act_right_hands.astype(np.float32),
+
+
+        # "observation.state.left_tcp": left_tcp_obs.astype(np.float32),
+        # "observation.state.right_tcp": right_tcp_obs.astype(np.float32),
+        # "observation.state.left_delta_tcp": left_delta,
+        # "observation.state.right_delta_tcp": right_delta,
+        # "observation.state.left_pinch": mean_indices_with_zeros(obs, source_layout["obs_left_pinch"], row_count),
+        # "observation.state.right_pinch": mean_indices_with_zeros(obs, source_layout["obs_right_pinch"], row_count),
+        # "observation.state.left_finger_pressure": extract_columns_by_index(obs, source_layout["obs_left_pressure"], row_count),
+        # "observation.state.right_finger_pressure": extract_columns_by_index(obs, source_layout["obs_right_pressure"], row_count),
+        # "observation.state.left_wrist_force": extract_columns_by_index(obs, source_layout["obs_left_force"], row_count),
+        # "observation.state.right_wrist_force": extract_columns_by_index(obs, source_layout["obs_right_force"], row_count),
+        # "action.left_delta_tcp": left_delta.astype(np.float32),
+        # "action.right_delta_tcp": right_delta.astype(np.float32),
+        # "action.left_pinch": mean_indices_with_zeros(act, source_layout["act_left_pinch"], row_count),
+        # "action.right_pinch": mean_indices_with_zeros(act, source_layout["act_right_pinch"], row_count),
+        # "task.progress.chest": np.zeros(row_count, dtype=np.float32),
+        # "task.progress.left": np.zeros(row_count, dtype=np.float32),
+        # "task.progress.right": np.zeros(row_count, dtype=np.float32),
+        # "teleoperated": get_scalar_column_or_default(table, "teleoperated", row_count, np.int64, 0),
         "timestamp": get_scalar_column_or_default(table, "timestamp", row_count, np.float32, 0.0),
         "frame_index": get_scalar_column_or_default(table, "frame_index", row_count, np.int64, 0),
         "episode_index": get_scalar_column_or_default(table, "episode_index", row_count, np.int64, 0),

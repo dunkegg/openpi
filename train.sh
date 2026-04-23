@@ -1,3 +1,3 @@
 export WANDB_API_KEY=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
 export XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 
-uv run scripts/train.py pi05_wh1 --exp-name=test_express_1 --overwrite 
+uv run scripts/train.py pi05_wh1 --exp-name=test_express_2 --overwrite 

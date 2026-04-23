@@ -1,0 +1,62 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+        {
+        "name": "Debug convert_data",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/convert_raw2v3.py",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "python": "${workspaceFolder}/.venv/bin/python",
+        "justMyCode": false,
+        "args": [
+            "--src",
+            "${workspaceFolder}/data/lerobot/express_v3",
+            "--dst",
+            "${workspaceFolder}/data/lerobot/express_v2pi"
+        ]
+        },
+        {
+        "name": "compute_norm_stats",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/scripts/compute_norm_stats.py",
+        "cwd": "${workspaceFolder}",
+        "python": "${workspaceFolder}/.venv/bin/python",
+        "justMyCode": false,
+        "args": [
+            "--config-name",
+            "pi05_wh1"
+        ],
+        "console": "integratedTerminal",
+        },
+        {
+        "name": "train",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/scripts/train.py",
+        "cwd": "${workspaceFolder}",
+        "python": "${workspaceFolder}/.venv/bin/python",
+        "justMyCode": false,
+        "args": [
+            "pi05_wh1",
+            "--exp-name=test_express_1",
+            "--overwrite"
+        ],
+        "console": "integratedTerminal",
+        },
+        {
+        "name": "test",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/rollout.py",
+        "cwd": "${workspaceFolder}",
+        "python": "${workspaceFolder}/.venv2/bin/python",
+        "justMyCode": false,
+        "args": [
+        ],
+        "console": "integratedTerminal",
+        }
+  ]
+}

@@ -308,7 +308,7 @@ def convert_dataset(src: Path, dst: Path,
 
     # Build manifest
     manifest = _build_manifest(features, state_keys, action_keys,
-                                "observation.state", "action", fps)
+                                "observation.state", "actions", fps)
 
     # ------------------------------------------------------------------
     # Build new V2.1 features dict
@@ -324,7 +324,7 @@ def convert_dataset(src: Path, dst: Path,
         "shape": [state_dim],
         "names": None,
     }
-    new_features["action"] = {
+    new_features["actions"] = {
         "dtype": "float32",
         "shape": [action_dim],
         "names": None,
@@ -417,7 +417,7 @@ def convert_dataset(src: Path, dst: Path,
 
             # Insert merged columns
             df_ep["observation.state"] = list(state_matrix)
-            df_ep["action"] = list(action_matrix)
+            df_ep["actions"] = list(action_matrix)
 
             # Write per-episode parquet
             ep_chunk = ep_idx // chunks_size
@@ -428,7 +428,7 @@ def convert_dataset(src: Path, dst: Path,
             # Compute per-episode stats for the merged columns
             ep_stats = {}
             ep_stats["observation.state"] = _compute_episode_stats_for_column(state_matrix)
-            ep_stats["action"] = _compute_episode_stats_for_column(action_matrix)
+            ep_stats["actions"] = _compute_episode_stats_for_column(action_matrix)
             all_episode_stats[ep_idx] = ep_stats
 
             print(f"  episode_{ep_idx:06d}.parquet  ({len(df_ep)} frames)")
@@ -497,7 +497,7 @@ def convert_dataset(src: Path, dst: Path,
             # Add our computed episode stats for merged columns
             if ep_idx in all_episode_stats:
                 stats_nested["observation.state"] = all_episode_stats[ep_idx]["observation.state"]
-                stats_nested["action"] = all_episode_stats[ep_idx]["action"]
+                stats_nested["actions"] = all_episode_stats[ep_idx]["actions"]
 
             stats_writer.write({
                 "episode_index": ep_idx,
@@ -522,7 +522,7 @@ def convert_dataset(src: Path, dst: Path,
             new_global_stats[k] = v
 
         new_global_stats["observation.state"] = _concat_stats(global_stats, state_keys)
-        new_global_stats["action"] = _concat_stats(global_stats, action_keys)
+        new_global_stats["actions"] = _concat_stats(global_stats, action_keys)
 
         with open(dst / "meta" / "stats.json", "w") as f:
             json.dump(_to_serializable(new_global_stats), f, indent=2)
