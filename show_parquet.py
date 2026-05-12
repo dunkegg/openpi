@@ -1,7 +1,9 @@
 import pandas as pd
 
-df = pd.read_parquet("data/lerobot/libero/data/chunk-000/episode_000000.parquet")
-print(df["actions"][0])
+# df = pd.read_parquet("data/lerobot/libero/data/chunk-000/episode_000000.parquet")
+df = pd.read_parquet("data/lerobot/express_v3/data/chunk-000/file-000.parquet")
+print(df.columns)
+# print(df["observation.images"][0])
 # for i, action in enumerate(df["action"]):
 #     torsorpy = action[28:31]
 #     hb       = action[31]

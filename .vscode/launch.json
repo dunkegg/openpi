@@ -57,6 +57,18 @@
         "args": [
         ],
         "console": "integratedTerminal",
-        }
+        },
+        {
+        "name": "data_trans",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/h5_2_lerobot.py",
+        "cwd": "${workspaceFolder}",
+        "python": "${workspaceFolder}/.venv2/bin/python",
+        "justMyCode": false,
+        "args": [
+        ],
+        "console": "integratedTerminal",
+        },        
   ]
 }

@@ -54,7 +54,7 @@ def parse_args():
                         help="采样温度")
     
     # 输出配置
-    parser.add_argument("--output_dir", type=str, default="./rollout_results2",
+    parser.add_argument("--output_dir", type=str, default="./rollout_results_train",
                         help="结果输出目录")
     parser.add_argument("--save_actions", action="store_true", default=True,
                         help="是否保存预测动作")
@@ -314,7 +314,7 @@ def save_rollout_results(
     
     # 计算误差统计
     if ground_truth_actions and len(ground_truth_actions) > 0:
-        errors = calculate_error_metrics(predicted_actions, ground_truth_actions)
+        errors = calculate_error_metrics(predicted_actions, ground_truth_actions,action_dim=26)
         results["error_metrics"] = errors
         
         print(f"  Episode {episode_idx} 误差统计:")

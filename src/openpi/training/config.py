@@ -19,6 +19,7 @@ import openpi.models.pi0_fast as pi0_fast
 import openpi.models.tokenizer as _tokenizer
 import openpi.policies.aloha_policy as aloha_policy
 import openpi.policies.wh1_policy as wh1_policy
+import openpi.policies.wh2_policy as wh2_policy
 import openpi.policies.droid_policy as droid_policy
 import openpi.policies.libero_policy as libero_policy
 import openpi.shared.download as _download
@@ -479,6 +480,79 @@ class  LeRobotWH1DataConfig(DataConfigFactory):
             ],
             outputs=[
                 wh1_policy.WH1Outputs()
+            ],
+        )
+
+        # --------------------------------------------------
+        # Step3: model transforms
+        # --------------------------------------------------
+        model_transforms = ModelTransformFactory()(model_config)
+
+        return dataclasses.replace(
+            self.create_base_config(assets_dirs, model_config),
+
+            repack_transforms=repack_transform,
+            data_transforms=data_transforms,
+            model_transforms=model_transforms,
+        )
+
+@dataclasses.dataclass(frozen=True)
+class  LeRobotWH2DataConfig(DataConfigFactory):
+    """
+    DataConfig for your custom LeRobot dataset:
+
+    observation.images.chest
+    observation.images.left
+    observation.images.right
+
+    observation.state : 8 dim
+    action            : 8 dim
+    """
+
+    @override
+    def create(
+        self,
+        assets_dirs: pathlib.Path,
+        model_config: _model.BaseModelConfig,
+    ) -> DataConfig:
+
+        # --------------------------------------------------
+        # Step1: rename raw lerobot keys -> internal names
+        # --------------------------------------------------
+        repack_transform = _transforms.Group(
+            inputs=[
+                _transforms.RepackTransform(
+                    {
+                        # images
+                        "images": {
+                            "cam_low": "observation.images.chest",
+                            # "cam_left_wrist": "observation.images.left",
+                            # "cam_right_wrist": "observation.images.right",
+                        },
+
+                        "state": "observation.state",
+
+                        # action
+                        "actions": "actions",
+
+                        # task text
+                        "prompt": "prompt",
+                    }
+                )
+            ]
+        )
+
+        # --------------------------------------------------
+        # Step2: convert to OpenPI policy format
+        # --------------------------------------------------
+        data_transforms = _transforms.Group(
+            inputs=[
+                wh2_policy.WH2Inputs(
+                    # model_type=model_config.model_type,
+                )
+            ],
+            outputs=[
+                wh2_policy.WH2Outputs()
             ],
         )
 
@@ -1046,6 +1120,39 @@ _CONFIGS = [
         # weight_loader=None,
         pytorch_weight_path=None,
         num_train_steps=100_000,
+        fsdp_devices = 4,
+    ),
+    TrainConfig(
+        name="pi05_wh2",
+        model=pi0_config.Pi0Config(
+            pi05=True,
+            action_dim=32,  # pi05 is trained with 32-dim actions
+            action_horizon=16,
+        ),
+        data=LeRobotWH2DataConfig(
+            # repo_id="/mnt/pfs/s7fsio/code/openpi/data/lerobot/express_v2pi",
+            repo_id="object_train",
+            # root="/mnt/pfs/s7fsio/code/openpi/data/lerobot/express_v2pi",
+            base_config=DataConfig(prompt_from_task=True),
+            assets=AssetsConfig(
+                # Important: reuse the original DROID norm stats during fine-tuning!
+                assets_dir="checkpoints/pi05_base/assets",
+                asset_id="wh2",
+            ),
+        ),
+        batch_size=32,
+        lr_schedule=_optimizer.CosineDecaySchedule(
+            warmup_steps=10_000,
+            peak_lr=5e-5,
+            decay_steps=1_000_000,
+            decay_lr=5e-5,
+        ),
+        optimizer=_optimizer.AdamW(clip_gradient_norm=1.0),
+        ema_decay=0.999,
+        weight_loader=weight_loaders.CheckpointWeightLoader("checkpoints/pi05_base/params"),
+        # weight_loader=None,
+        pytorch_weight_path=None,
+        num_train_steps=100_00,
         fsdp_devices = 4,
     ),
     #
