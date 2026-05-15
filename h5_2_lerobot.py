@@ -30,8 +30,8 @@ def print_hdf5_keys(h5_path):
 # ⚙️ 配置
 # ==============================
 
-INPUT_GLOB = "data/h5/resthome15_obj_goal.h5"   # 你的输入
-OUTPUT_DIR = "data/lerobot/object_train"  # 输出目录
+INPUT_GLOB = "data/h5_ed2/*.h5"   # 你的输入
+OUTPUT_DIR = "data/lerobot/move_to_object"  # 输出目录
 FPS = 30
 CHUNK_SIZE = 1000  # 每多少个 episode 一个 chunk
 
@@ -90,61 +90,104 @@ def ensure_dir(path):
 # ==============================
 # 📥 读取 HDF5
 # ==============================
-
-
 def load_hdf5(path):
     """
-    读取 HDF5 中的第一个 traj group，
-    并转换成原来的 Lerobot 格式字段
+    读取 HDF5 中所有 traj group，
+    返回 list[dict]
     """
+
+    all_data = []
 
     with h5py.File(path, "r") as f:
 
-        # 取第一个 trajectory group
-        first_traj = sorted(f.keys())[0]
-        g = f[first_traj]
+        for traj_name in sorted(f.keys()):
 
-        # (T, 8)
-        camera_pos = g["camera_pos"][:]
+            g = f[traj_name]
 
-        # 你的 8 维定义：
-        # [
-        #   torso_r,
-        #   torso_p,
-        #   torso_y,
-        #   hb,
-        #   vx,
-        #   vy,
-        #   vyaw,
-        #   pyaw
-        # ]
+            # (T, 8)
+            camera_pos = g["camera_pos"][:]
 
-        data = {
-            "torso_r": camera_pos[:, 0],
-            "torso_p": camera_pos[:, 1],
-            "torso_y": camera_pos[:, 2],
-            "hb":      camera_pos[:, 3],
-            "vx":      camera_pos[:, 4],
-            "vy":      camera_pos[:, 5],
-            "vyaw":    camera_pos[:, 6],
-            "pyaw":    camera_pos[:, 7],
-        }
+            data = {
+                "torso_r": camera_pos[:, 0],
+                "torso_p": camera_pos[:, 1],
+                "torso_y": camera_pos[:, 2],
+                "hb":      camera_pos[:, 3],
+                "vx":      camera_pos[:, 4],
+                "vy":      camera_pos[:, 5],
+                "vyaw":    camera_pos[:, 6],
+                "pyaw":    camera_pos[:, 7],
+            }
 
-        # instruction
-        if "instruction" in g:
-            instruction = g["instruction"][()]
+            # instruction
+            if "instruction" in g:
+                instruction = g["instruction"][()]
 
-            # bytes -> str
-            if isinstance(instruction, bytes):
-                instruction = instruction.decode("utf-8")
+                if isinstance(instruction, bytes):
+                    instruction = instruction.decode("utf-8")
 
-            data["instruction"] = instruction
+                data["instruction"] = instruction
 
-        # rgb
-        if "rgb" in g:
-            data["images"] = g["rgb"][:]
+            # rgb
+            if "rgb" in g:
+                data["images"] = g["rgb"][:]
 
-    return data
+            all_data.append(data)
+
+    return all_data
+
+# def load_hdf5(path):
+#     """
+#     读取 HDF5 中的第一个 traj group，
+#     并转换成原来的 Lerobot 格式字段
+#     """
+
+#     with h5py.File(path, "r") as f:
+
+#         # 取第一个 trajectory group
+#         first_traj = sorted(f.keys())[0]
+#         g = f[first_traj]
+
+#         # (T, 8)
+#         camera_pos = g["camera_pos"][:]
+
+#         # 你的 8 维定义：
+#         # [
+#         #   torso_r,
+#         #   torso_p,
+#         #   torso_y,
+#         #   hb,
+#         #   vx,
+#         #   vy,
+#         #   vyaw,
+#         #   pyaw
+#         # ]
+
+#         data = {
+#             "torso_r": camera_pos[:, 0],
+#             "torso_p": camera_pos[:, 1],
+#             "torso_y": camera_pos[:, 2],
+#             "hb":      camera_pos[:, 3],
+#             "vx":      camera_pos[:, 4],
+#             "vy":      camera_pos[:, 5],
+#             "vyaw":    camera_pos[:, 6],
+#             "pyaw":    camera_pos[:, 7],
+#         }
+
+#         # instruction
+#         if "instruction" in g:
+#             instruction = g["instruction"][()]
+
+#             # bytes -> str
+#             if isinstance(instruction, bytes):
+#                 instruction = instruction.decode("utf-8")
+
+#             data["instruction"] = instruction
+
+#         # rgb
+#         if "rgb" in g:
+#             data["images"] = g["rgb"][:]
+
+#     return data
 
 # def load_hdf5(path):
 #     with h5py.File(path, "r") as f:
@@ -270,6 +313,7 @@ def compute_episode_stats(
 
 def main():
     files = sorted(glob.glob(INPUT_GLOB))
+    # file = files[0]
     print(f"Found {len(files)} files")
 
     ensure_dir(OUTPUT_DIR)
@@ -280,69 +324,93 @@ def main():
 
     episodes_meta = []
     episodes_stats = []
-    for ep_idx, path in enumerate(tqdm(files)):
+    tasks = []
+    task_to_idx = {}
+    next_task_idx = 0
+    # for ep_idx, path in enumerate(tqdm(files)):
                 # 用法
-        print_hdf5_keys(path)
-        data = load_hdf5(path)
+        # print_hdf5_keys(path)
+    global_ep_idx = 0
+    for file in files:
+        all_data = load_hdf5(file)
+        for k, data in enumerate(tqdm(all_data)):
+            ep_idx = global_ep_idx
+            global_ep_idx += 1
+            # task_index = ep_idx
+            state, actions = build_state_action(data)
+
+            # instruction = data['instruction']
+            instruction = data.get("instruction", "unknown task")
+
+            if instruction not in task_to_idx:
+                task_to_idx[instruction] = next_task_idx
+
+                tasks.append({
+                    "task_index": next_task_idx,
+                    "task": instruction,
+                })
+
+                next_task_idx += 1
+
+            task_index = task_to_idx[instruction]
+
+            T = len(state)
+
+            all_states.append(state)
+            all_actions.append(actions)
+
+            # chunk
+            chunk_id = ep_idx // CHUNK_SIZE
+
+            parquet_dir = os.path.join(
+                OUTPUT_DIR,
+                f"data/chunk-{chunk_id:03d}"
+            )
+            ensure_dir(parquet_dir)
+
+            df = pd.DataFrame({
+                # "observation.images.chest": list(data["images"]),  # ❗必须加
+                # "observation.images.chest": [
+                #     f"observation.images.chest/episode_{ep_idx:06d}.mp4"
+                # ] * T,
+                "observation.state": list(state),
+                "actions": list(actions),
+                "timestamp": np.arange(T) / FPS,
+                "frame_index": np.arange(T),
+                "episode_index": np.full(T, ep_idx),
+                "task_index": np.full(T, task_index),   # ✅新增 为什么都是0 todo
+            })
+
+            parquet_path = os.path.join(
+                parquet_dir,
+                f"episode_{ep_idx:06d}.parquet"
+            )
+            df.to_parquet(parquet_path)
+
+            # video（如果有）
+            # if "images" in data:
+            video_dir = os.path.join(
+                OUTPUT_DIR,
+                f"videos/chunk-{chunk_id:03d}/observation.images.chest"
+            )
+            video_path = os.path.join(
+                video_dir,
+                f"episode_{ep_idx:06d}.mp4"
+            )
+            write_video(data["images"], video_path, FPS)
+
+            # episode meta
+            episodes_meta.append({
+                "episode_index": ep_idx,
+                "length": int(T),
+            })
+
+            
+            episodes_stats.append(
+                compute_episode_stats(state, actions, ep_idx, fps=FPS)
+            )
 
 
-        state, actions = build_state_action(data)
-
-        T = len(state)
-
-        all_states.append(state)
-        all_actions.append(actions)
-
-        # chunk
-        chunk_id = ep_idx // CHUNK_SIZE
-
-        parquet_dir = os.path.join(
-            OUTPUT_DIR,
-            f"data/chunk-{chunk_id:03d}"
-        )
-        ensure_dir(parquet_dir)
-
-        df = pd.DataFrame({
-            # "observation.images.chest": list(data["images"]),  # ❗必须加
-            # "observation.images.chest": [
-            #     f"observation.images.chest/episode_{ep_idx:06d}.mp4"
-            # ] * T,
-            "observation.state": list(state),
-            "actions": list(actions),
-            "timestamp": np.arange(T) / FPS,
-            "frame_index": np.arange(T),
-            "episode_index": np.full(T, ep_idx),
-            "task_index": np.zeros(T, dtype=np.int64),   # ✅新增 为什么都是0 todo
-        })
-
-        parquet_path = os.path.join(
-            parquet_dir,
-            f"episode_{ep_idx:06d}.parquet"
-        )
-        df.to_parquet(parquet_path)
-
-        # video（如果有）
-        # if "images" in data:
-        video_dir = os.path.join(
-            OUTPUT_DIR,
-            f"videos/chunk-{chunk_id:03d}/observation.images.chest"
-        )
-        video_path = os.path.join(
-            video_dir,
-            f"episode_{ep_idx:06d}.mp4"
-        )
-        write_video(data["images"], video_path, FPS)
-
-        # episode meta
-        episodes_meta.append({
-            "episode_index": ep_idx,
-            "length": int(T),
-        })
-
-        
-        episodes_stats.append(
-            compute_episode_stats(state, actions, ep_idx, fps=FPS)
-        )
     # ==============================
     # 📊 统计信息
     # ==============================
@@ -488,10 +556,8 @@ def main():
     # ==============================
 
     with open(os.path.join(OUTPUT_DIR, "meta/tasks.jsonl"), "w") as f:
-        f.write(json.dumps({
-            "task_index": 0,
-            "task": "walk forward"
-        }) + "\n")
+        for item in tasks:
+            f.write(json.dumps(item) + "\n")
 
     # ==============================
     # 📄 tasks.jsonl（简单版本）

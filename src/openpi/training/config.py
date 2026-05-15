@@ -1131,7 +1131,7 @@ _CONFIGS = [
         ),
         data=LeRobotWH2DataConfig(
             # repo_id="/mnt/pfs/s7fsio/code/openpi/data/lerobot/express_v2pi",
-            repo_id="object_train",
+            repo_id="move_to_object",
             # root="/mnt/pfs/s7fsio/code/openpi/data/lerobot/express_v2pi",
             base_config=DataConfig(prompt_from_task=True),
             assets=AssetsConfig(
@@ -1142,17 +1142,17 @@ _CONFIGS = [
         ),
         batch_size=32,
         lr_schedule=_optimizer.CosineDecaySchedule(
-            warmup_steps=10_000,
-            peak_lr=5e-5,
-            decay_steps=1_000_000,
-            decay_lr=5e-5,
+            warmup_steps=2_000,
+            peak_lr=2e-5,
+            decay_steps=8_0000,
+            decay_lr=2e-6,
         ),
         optimizer=_optimizer.AdamW(clip_gradient_norm=1.0),
         ema_decay=0.999,
         weight_loader=weight_loaders.CheckpointWeightLoader("checkpoints/pi05_base/params"),
         # weight_loader=None,
         pytorch_weight_path=None,
-        num_train_steps=100_00,
+        num_train_steps=10_0000,
         fsdp_devices = 4,
     ),
     #
